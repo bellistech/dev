@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package metrics.v1;
+
+option go_package = "github.com/bellistech/metrics-system/api/metrics/v1;metricsv1";
+
+import "google/protobuf/timestamp.proto";
+
+// MetricsService defines the gRPC service for metrics collection
+service MetricsService {
+    // SendMetrics sends a batch of metrics to the server
+    rpc SendMetrics(MetricBatchRequest) returns (MetricBatchResponse);
+    
+    // StreamMetrics enables streaming metrics from agent to server
+    rpc StreamMetrics(stream MetricBatchRequest) returns (stream MetricBatchResponse);
+    
+    // HealthCheck verifies server health
+    rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// MetricType represents the type of metric
+enum MetricType {
+    METRIC_TYPE_UNSPECIFIED = 0;
+    METRIC_TYPE_GAUGE = 1;       // Point-in-time value
+    METRIC_TYPE_COUNTER = 2;     // Monotonically increasing
+    METRIC_TYPE_SUMMARY = 3;     // Statistical summary
+    METRIC_TYPE_HISTOGRAM = 4;   // Distribution of values
+}
+
+// Metric represents a single metric data point
+message Metric {
+    string name = 1;                              // Metric name (e.g., "cpu_usage_percent")
+    MetricType type = 2;                          // Type of metric
+    double value = 3;                             // Metric value
+    google.protobuf.Timestamp timestamp = 4;      // When the metric was collected
+    map<string, string> labels = 5;               // Additional labels/dimensions
+    string hostname = 6;                          // Source hostname
+    string unit = 7;                              // Unit of measurement (e.g., "percent", "bytes")
+}
+
+// MetricBatchRequest contains a batch of metrics from an agent
+message MetricBatchRequest {
+    string hostname = 1;                          // Agent hostname
+    string agent_id = 2;                          // Unique agent identifier
+    google.protobuf.Timestamp timestamp = 3;      // Batch collection timestamp
+    repeated Metric metrics = 4;                  // List of metrics
+    map<string, string> agent_labels = 5;         // Labels for all metrics from this agent
+}
+
+// MetricBatchResponse acknowledges receipt of metrics
+message MetricBatchResponse {
+    bool success = 1;                             // Whether the batch was accepted
+    string message = 2;                           // Human-readable status message
+    int32 metrics_received = 3;                   // Number of metrics successfully received
+    int32 metrics_failed = 4;                     // Number of metrics that failed
+    google.protobuf.Timestamp server_timestamp = 5; // Server processing timestamp
+}
+
+// HealthCheckRequest for server health verification
+message HealthCheckRequest {
+    string agent_id = 1;                          // Agent identifier
+}
+
+// HealthCheckResponse indicates server health status
+message HealthCheckResponse {
+    bool healthy = 1;                             // Whether server is healthy
+    string version = 2;                           // Server version
+    google.protobuf.Timestamp timestamp = 3;      // Server timestamp
+}

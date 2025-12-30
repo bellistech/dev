@@ -1,0 +1,43 @@
+[Unit]
+Description=Metrics Collection Server
+Documentation=https://github.com/bellistech/metrics-system
+After=network.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=metrics
+Group=metrics
+
+# Configuration
+ExecStart=/usr/local/bin/metrics-server -config /etc/metrics-server/server.yaml
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Restart configuration
+Restart=always
+RestartSec=5
+StartLimitInterval=0
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=metrics-server
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

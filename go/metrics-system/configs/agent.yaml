@@ -1,0 +1,53 @@
+# Metrics Agent Configuration
+# 
+# This file configures the metrics collection agent.
+#
+# Adding a new collector is simple:
+# 1. Create the collector file (e.g., internal/agent/collector/myapp.go)
+# 2. Add init() function that calls RegisterFactory("myapp", ...)
+# 3. Add "myapp" to the collectors list below
+# No changes to main.go required!
+
+server:
+  # Address of the metrics server
+  address: "localhost:9090"
+  # Connection timeout
+  timeout: 30s
+  # TLS configuration (optional)
+  tls:
+    enabled: false
+    # cert_file: "/etc/metrics-agent/certs/client.crt"
+    # key_file: "/etc/metrics-agent/certs/client.key"
+    # ca_file: "/etc/metrics-agent/certs/ca.crt"
+
+collection:
+  # How often to collect and send metrics
+  interval: 60s
+  
+  # Which collectors to enable
+  # Run './bin/agent -list-collectors' to see all available collectors
+  collectors:
+    - cpu
+    - memory
+    - disk
+    - network
+    - uptime
+    # - apache    # Uncomment to enable Apache metrics (requires mod_status)
+    
+  # Maximum metrics per batch
+  batch_size: 500
+
+agent:
+  # Unique agent identifier (optional, defaults to hostname)
+  id: ""
+  # Labels to add to all metrics from this agent
+  labels:
+    environment: "production"
+    # region: "us-west-2"
+    # datacenter: "dc1"
+
+logging:
+  # Log level: debug, info, warn, error
+  level: "info"
+  # Log format: text, json
+  format: "text"

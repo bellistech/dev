@@ -1,0 +1,34 @@
+# Metrics Server Configuration
+#
+# This file configures the metrics collection server.
+
+grpc:
+  # Port to listen on
+  port: 9090
+  # Maximum message size (in bytes)
+  max_recv_msg_size: 16777216  # 16MB
+  # TLS configuration (optional)
+  tls:
+    enabled: false
+    # cert_file: "/etc/metrics-server/certs/server.crt"
+    # key_file: "/etc/metrics-server/certs/server.key"
+    # ca_file: "/etc/metrics-server/certs/ca.crt"
+
+database:
+  # PostgreSQL connection settings
+  host: "localhost"
+  port: 5432
+  user: "metrics"
+  password: "metrics"
+  database: "metrics"
+  sslmode: "disable"
+  # Connection pool settings
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: "5m"
+
+logging:
+  # Log level: debug, info, warn, error
+  level: "info"
+  # Log format: text, json
+  format: "text"

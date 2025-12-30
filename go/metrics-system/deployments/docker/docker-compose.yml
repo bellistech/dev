@@ -1,0 +1,83 @@
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: metrics-postgres
+    environment:
+      POSTGRES_USER: metrics
+      POSTGRES_PASSWORD: metrics
+      POSTGRES_DB: metrics
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metrics -d metrics"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - metrics-network
+
+  server:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/server.Dockerfile
+    container_name: metrics-server
+    ports:
+      - "9090:9090"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=metrics
+      - DATABASE_PASSWORD=metrics
+      - DATABASE_NAME=metrics
+    networks:
+      - metrics-network
+    restart: unless-stopped
+
+  agent:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/agent.Dockerfile
+    container_name: metrics-agent
+    depends_on:
+      - server
+    environment:
+      - SERVER_ADDRESS=server:9090
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    privileged: true
+    networks:
+      - metrics-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: metrics-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../../grafana/datasources:/etc/grafana/provisioning/datasources
+      - ../../grafana/dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - postgres
+    networks:
+      - metrics-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  grafana_data:
+
+networks:
+  metrics-network:
+    driver: bridge

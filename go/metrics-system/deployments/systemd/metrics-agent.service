@@ -1,0 +1,42 @@
+[Unit]
+Description=Metrics Collection Agent
+Documentation=https://github.com/bellistech/metrics-system
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+
+# Configuration
+ExecStart=/usr/local/bin/metrics-agent -config /etc/metrics-agent/agent.yaml
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Restart configuration
+Restart=always
+RestartSec=5
+StartLimitInterval=0
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=metrics-agent
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Security
+NoNewPrivileges=false
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/
+ReadWritePaths=/var/log
+
+# Allow reading /proc and /sys
+ProtectKernelTunables=false
+ProtectControlGroups=false
+
+[Install]
+WantedBy=multi-user.target
